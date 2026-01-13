@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 )
@@ -90,24 +90,31 @@ func outputLocationData() error {
 	prevPage = &nextPage
 	offset := nextPage * 20
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/?offset=%d&limit=20", offset)
-	resp, err := http.Get(url)
+
+	value, exists := cache.Get(url)
+	if !exists {
+		res, err := http.Get(url)
+		if err != nil {
+			return err
+		}
+		defer res.Body.Close()
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+
+		value = body
+		cache.Add(url, value)
+	}
+
+	locations := LocationData{}
+	err := json.Unmarshal(value, &locations)
 	if err != nil {
 		return err
 	}
 
-	if resp.StatusCode > 299 {
-		errText := fmt.Sprintf("Response failed with status code: %d and\nbody: %s\n", resp.StatusCode, resp.Body)
-		return errors.New(errText)
-	}
-
-	decoder := json.NewDecoder(resp.Body)
-	var locationData LocationData
-	if err := decoder.Decode(&locationData); err != nil {
-		return err
-	}
-
 	for i := 0; i < 20; i++ {
-		fmt.Printf("%s\n", locationData.Results[i].Name)
+		fmt.Printf("%s\n", locations.Results[i].Name)
 	}
 	return nil
 }

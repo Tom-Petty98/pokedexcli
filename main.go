@@ -5,10 +5,16 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
+
+	pokecache "github.com/Tom-Petty98/pokedexcli/internal"
 )
+
+var cache *pokecache.Cache
 
 func main() {
 	userInput := bufio.NewScanner(os.Stdin)
+	cache = pokecache.NewCache(5 * time.Second)
 
 	for {
 		fmt.Print("Pokedex > ")
