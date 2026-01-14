@@ -14,7 +14,7 @@ var cache *pokecache.Cache
 
 func main() {
 	userInput := bufio.NewScanner(os.Stdin)
-	cache = pokecache.NewCache(5 * time.Second)
+	cache = pokecache.NewCache(1 * time.Minute)
 
 	for {
 		fmt.Print("Pokedex > ")
@@ -27,9 +27,12 @@ func main() {
 		if len(words) > 0 {
 			value, exists := commands[words[0]]
 			if exists {
-				if err := value.callback(); err != nil {
+				args := words[1:]
+
+				if err := value.callback(args); err != nil {
 					fmt.Printf("%s\n", err)
 				}
+
 			} else {
 				fmt.Print("Unknown command\n")
 			}
